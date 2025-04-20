@@ -12,27 +12,31 @@ import java.util.*;
  * project which will use framework.
  */
 public class CoreEngine {
-    protected DatabaseEngine databaseEngine;
-    protected DependencyContainerEngine dependencyContainerEngine;
-    protected DependencyInjectionEngine dependencyInjectionEngine;
-
-    protected static Set<Class<?>> classes;    //all classes in project
-    protected static Map<String, Class<?>> classMap;    //full package name to class map
-
     private static volatile CoreEngine instance = null;
+
+    protected static DatabaseEngine databaseEngine;
+    protected static DependencyEngine dependencyEngine;
+
+    protected static List<Class<?>> classes;            //all classes in a project
+    protected static List<Class<?>> entityClasses;      //classes annotated with @Entity
+    protected static List<Class<?>> repositoryClasses;  //classes annotated with @Repository
+    protected static List<Class<?>> serviceClasses;     //classes annotated with @Service
+    protected static List<Class<?>> controllerClasses;  //classes annotated with @Controller
 
     private static final String PACKAGE_LOCATION = "src/";
     private static final String PACKAGE_NAME = "playground";
 
     private CoreEngine() {
-        classes = new HashSet<>();
-        classMap = new HashMap<>();
+        classes = new ArrayList<>();
+        entityClasses = new ArrayList<>();
+        repositoryClasses = new ArrayList<>();
+        serviceClasses = new ArrayList<>();
+        controllerClasses = new ArrayList<>();
 
-        databaseEngine = new DatabaseEngine();
-        dependencyContainerEngine = new DependencyContainerEngine();
-        dependencyInjectionEngine = new DependencyInjectionEngine();
-
-        findClassesInPackage();
+        /* initialization */
+        initClasses();
+        initDatabase();
+        initDependency();
     }
 
     public static CoreEngine getInstance() {
@@ -45,7 +49,7 @@ public class CoreEngine {
     /**
      * Scans the project for classes..
      */
-    private static void findClassesInPackage() {
+    private static void initClasses() {
         File directory = new File(PACKAGE_LOCATION + PACKAGE_NAME );
 
         if (directory.exists()) {
@@ -70,7 +74,7 @@ public class CoreEngine {
                 try {
                     Class<?> clazz = Class.forName(packageName + "." + className);
                     classes.add(Class.forName(packageName + "." + className));
-                    classMap.put(packageName + "." + className, clazz);
+
                 } catch (ClassNotFoundException e) {
                     System.err.println("Class not found: " + packageName + "." + className);
                 }
@@ -78,12 +82,18 @@ public class CoreEngine {
         }
     }
 
-    public static Set<Class<?>> getClasses() {
-        return classes;
+    private static void initDatabase(){
+        databaseEngine = DatabaseEngine.getInstance();
+        databaseEngine.createDatabase(entityClasses);
     }
 
-    public static Map<String, Class<?>> getClassMap() {
-        return classMap;
+    private static void initDependency(){
+        dependencyEngine = DependencyEngine.getInstance();
+        dependencyEngine.creteDependency(classes);
+    }
+
+    public static List<Class<?>> getClasses() {
+        return classes;
     }
 
     public static void main(String[] args) {
