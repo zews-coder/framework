@@ -33,7 +33,6 @@ public class CoreEngine {
         serviceClasses = new ArrayList<>();
         controllerClasses = new ArrayList<>();
 
-        /* initialization */
         initClasses();
         initDatabase();
         initDependency();
@@ -46,9 +45,6 @@ public class CoreEngine {
         return instance;
     }
 
-    /**
-     * Scans the project for classes..
-     */
     private static void initClasses() {
         File directory = new File(PACKAGE_LOCATION + PACKAGE_NAME );
 
@@ -69,12 +65,28 @@ public class CoreEngine {
                 scanDirectory(file, packageName + "." + file.getName());
             } else if (file.getName().endsWith(".java")) {
                 String className = file.getName().substring(0, file.getName().length() - 5); // Remove .java
-                System.out.println("Found class: " + packageName + "." + className);
 
                 try {
                     Class<?> clazz = Class.forName(packageName + "." + className);
-                    classes.add(Class.forName(packageName + "." + className));
+                    classes.add(clazz);
 
+                    if (clazz.isAnnotationPresent(framework.annotations.database.Entity.class)){
+                        entityClasses.add(clazz);
+                        System.out.println( "Found entity: " + clazz.getName());
+                        continue;
+                    }
+                    if (clazz.isAnnotationPresent(framework.annotations.Repository.class)){
+                        repositoryClasses.add(clazz);
+                        continue;
+                    }
+                    if (clazz.isAnnotationPresent(framework.annotations.Service.class)){
+                        serviceClasses.add(clazz);
+                        continue;
+                    }
+                    if (clazz.isAnnotationPresent(framework.annotations.Controller.class)){
+                        controllerClasses.add(clazz);
+                        continue;
+                    }
                 } catch (ClassNotFoundException e) {
                     System.err.println("Class not found: " + packageName + "." + className);
                 }
@@ -89,7 +101,9 @@ public class CoreEngine {
 
     private static void initDependency(){
         dependencyEngine = DependencyEngine.getInstance();
-        dependencyEngine.creteDependency(classes);
+        dependencyEngine.creteRepository(repositoryClasses);
+        dependencyEngine.creteService(serviceClasses);
+        dependencyEngine.creteController(controllerClasses);
     }
 
     public static List<Class<?>> getClasses() {

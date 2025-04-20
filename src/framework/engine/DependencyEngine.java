@@ -20,18 +20,9 @@ public class DependencyEngine {
         return instance;
     }
 
-    protected void creteDependency(List<Class<?>> classes){
-        for (Class<?> cls : classes) {
-            if (cls.isAnnotationPresent(Repository.class)){
-                return;
-            }
-            if (cls.isAnnotationPresent(Service.class)){
-                return;
-            }
-            if (cls.isAnnotationPresent(Controller.class)){
-                return;
-            }
-        }
+    protected void creteRepository(List<Class<?>> classes){}
 
-    }
+    protected void creteService(List<Class<?>> classes){}
+
+    protected void creteController(List<Class<?>> classes){}
 }
